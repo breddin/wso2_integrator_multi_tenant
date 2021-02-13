@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<proxy xmlns="http://ws.apache.org/ns/synapse"
+       name="pxyOrchestrationTestRun_v1"
+       transports="vfs"
+       startOnLoad="true">
+   <description>Multi-file processing with configurable Summary/Detail processing capabilities for EVO-QBO</description>
+   <target>
+      <inSequence>
+         <property name="propProcessName" expression="$ctx:proxy.name"/>
+         <property name="propServiceId" value="PostEvoPayrollLedger"/>
+         <property name="propProcessStandardProperties" value="false"/>
+         <property name="propTenantMasterId" value="vendorpartner"/>
+         <property name="propMasterTenantOrchestrationCluster" value="mtvxwordpress"/>
+         <property name="propProcessStandardProperties" value="false"/>
+         <property name="LOG_LEVEL" value="Silent"/>
+         <property name="PROCESS_LOG_LEVEL" value="Silent"/>
+         <property name="LOG_TARGET" value="filesystem"/>
+         <property xmlns:ns="http://org.apache.synapse/xsd"
+                   name="propIncomingFileName"
+                   expression="$trp:FILE_NAME"/>
+         <property xmlns:ns="http://org.apache.synapse/xsd"
+                   name="propIncomingFileIdentifier"
+                   expression="concat(tokenize($ctx:propIncomingFileName,'_')[7],'_',tokenize($ctx:propIncomingFileName,'_')[8],'_',tokenize($ctx:propIncomingFileName,'_')[9],'_',tokenize($ctx:propIncomingFileName,'_')[10])"/>
+         <property xmlns:ns="http://org.apache.synapse/xsd"
+                   name="propIncomingFileURI"
+                   expression="$trp:FILE_PATH"/>
+         <property xmlns:ns="http://org.apache.synapse/xsd"
+                   name="evoTenantId"
+                   expression="substring-before($ctx:propIncomingFileName , '_')"/>
+         <property xmlns:ns="http://org.apache.synapse/xsd"
+                   name="propParentTenantId"
+                   expression="tokenize($ctx:propIncomingFileURI,'/')[6]"/>
+         <property xmlns:ns="http://org.apache.synapse/xsd"
+                   name="propIntakeFilePath"
+                   expression="concat('file:///opt/tango/var/tenant/', $ctx:propParentTenantId, '/data-from/sftp')"/>
+         <property xmlns:ns="http://org.apache.synapse/xsd"
+                   name="propArchiveFilePath"
+                   expression="concat($ctx:propIntakeFilePath , '/_archive')"/>
+         <sequence key="seqGetServiceOrchestrationDefinition_v3"/>
+         <property name="OrchestrationStepPointer" value="1" type="INTEGER"/>
+         <property name="NextOrchestrationStepPointer" value="1" type="INTEGER"/>
+         <property name="OrchestrationSegment"
+                   expression="$ctx:propOrchestrationDefinition//*[name()='Entry' and ./*[name()='service_step' and text()=string(get-property('OrchestrationStepPointer'))]]/*[name()='service_sequence']/text()"
+                   scope="default"/>
+         <payloadFactory media-type="text">
+            <format/>
+            <args>
+               <arg evaluator="xml" expression="get-property('$ctx:propBasePayload')"/>
+            </args>
+         </payloadFactory>
+         <sequence key="seqProcessOrchestrationSegment_v1"/>
+         <drop/>
+      </inSequence>
+      <outSequence>
+         <sequence key="seqProcessPostingResponse_v3"/>
+         <drop/>
+      </outSequence>
+      <faultSequence>
+         <log level="custom" separator="&#xA;">
+            <property name="&#xA;ERROR_CODE" expression="$ctx:ERROR_CODE"/>
+            <property name="ERROR_MESSAGE" expression="$ctx:ERROR_MESSAGE"/>
+         </log>
+         <!--sequence key="seqEventSetFault"/-->
+         <drop/>
+      </faultSequence>
+   </target>
+   <parameter name="transport.PollInterval">5000ms</parameter>
+   <parameter name="transport.vfs.FileURI">file://opt/tango/var/tenant/vendorpartner/data-from/sftp</parameter>
+   <parameter name="transport.vfs.ContentType">text/plain</parameter>
+   <parameter name="transport.vfs.ActionAfterProcess">MOVE</parameter>
+   <parameter name="transport.vfs.MoveAfterFailure">file://opt/tango/var/tenant/vendorpartner/data-from/sftp/_archive</parameter>
+   <parameter name="transport.vfs.ActionAfterFailure">NONE</parameter>
+   <parameter name="transport.vfs.FileNamePattern">incomingFilePattern</parameter>
+   <parameter name="transport.vfs.MoveAfterProcess">file://opt/tango/var/tenant/vendorpartner/data-from/sftp/_archive</parameter>
+</proxy>

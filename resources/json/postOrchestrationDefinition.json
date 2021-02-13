@@ -1,0 +1,60 @@
+{
+  "_postpostserviceorchestrationdefinition_batch_req": {
+  "_postpostserviceorchestrationdefinition": [
+		{
+	    "Tenant_Id" : "tenant_id",
+	    "Service_Id": "PostEvoPayrollLedger",
+	    "Service_Step":1,
+	    "Service_Sequence":"seqEvolutionScrubVFS_v1",
+	    "Service_Sequence_Type":1,
+	    "Service_Step_Mode":1,
+	    "Service_Step_Environment":1
+	  },
+		{
+	    "Tenant_Id" : "tenant_id",
+	    "Service_Id": "PostEvoPayrollLedger",
+	    "Service_Step":2,
+	    "Service_Sequence":"seqQBOGetCaches_v13",
+	    "Service_Sequence_Type":1,
+	    "Service_Step_Mode":1,
+	    "Service_Step_Environment":1
+	  },
+		{
+	    "Tenant_Id" : "tenant_id",
+	    "Service_Id": "PostEvoPayrollLedger",
+	    "Service_Step":3,
+	    "Service_Sequence":"seqQBOHoldForCache",
+	    "Service_Sequence_Type":1,
+	    "Service_Step_Mode":1,
+	    "Service_Step_Environment":1
+	  },
+		{
+	    "Tenant_Id" : "tenant_id",
+	    "Service_Id": "PostEvoPayrollLedger",
+	    "Service_Step":4,
+	    "Service_Sequence":"seqEvolutionQBOPrimaryTranslate_v1",
+	    "Service_Sequence_Type":1,
+	    "Service_Step_Mode":1,
+	    "Service_Step_Environment":1
+	  },
+		{
+	    "Tenant_Id" : "tenant_id",
+	    "Service_Id": "PostEvoPayrollLedger",
+	    "Service_Step":5,
+	    "Service_Sequence":"seqEvolutionQBOPaycheckTranslate_v1",
+	    "Service_Sequence_Type":1,
+	    "Service_Step_Mode":1,
+	    "Service_Step_Environment":1
+	  },
+		{
+	    "Tenant_Id" : "tenant_id",
+	    "Service_Id": "PostEvoPayrollLedger",
+	    "Service_Step":6,
+	    "Service_Sequence":"seqEvoQBOPostExpenses_v1",
+	    "Service_Sequence_Type":1,
+	    "Service_Step_Mode":1,
+	    "Service_Step_Environment":1
+	  }
+  ]
+  }
+}

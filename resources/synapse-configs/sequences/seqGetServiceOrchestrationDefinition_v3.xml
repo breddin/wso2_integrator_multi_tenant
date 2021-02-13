@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse" name="seqGetServiceOrchestrationDefinition_v3" trace="enable">
+   <property name="PROCESS_STATE" value="seqGetServiceOrchestrationDefinition_v3" scope="default" type="STRING"/>
+   <property name="SERVICE_SEGMENT" value="seqGetServiceOrchestrationDefinition_v3" scope="default" type="STRING"/>
+   <property name="SEGMENT_STATE" value="INIT" scope="default" type="STRING"/>
+   <property name="propResponseSegmentName" value="PROCESS_PROPERTIES" scope="default" type="STRING"/>
+   <property name="propOrchestrationDefinition" scope="default">
+      <ReportParameters xmlns=""/>
+   </property>
+   <sequence key="seqPostLog"/>
+   <switch xmlns:ns="http://org.apache.synapse/xsd" source="$ctx:propMasterTenantOrchestrationCluster">
+      <case regex="^(\S+)$">
+         <log level="custom" separator="&#xA;">
+            <property name="Information: " expression="concat('Loading Master Tenant Orchestration Definition ', $ctx:propMasterTenantOrchestrationCluster)"/>
+         </log>
+         <property name="tenantId_orch" expression="$ctx:propMasterTenantOrchestrationCluster"/>
+      </case>
+      <default>
+         <log level="custom" separator="&#xA;">
+            <property name="Warning:: " expression="concat( 'Loading Child Tenant Orchestration Definition', $ctx:propMasterTenantOrchestrationCluster)"/>
+
+         </log>
+         <property name="tenantId_orch" expression="$ctx:tenantId"/>
+      </default>
+   </switch>
+   <property xmlns:ns="http://org.apache.synapse/xsd" name="uri.var.phost" expression="concat('https://cmdev01.cloudmills.com:9443/services/cmDemoDB01/resGetServiceOrchestrationDefinition?TenantId=', get-property('tenantId_orch'), '&amp;ServiceId=', get-property('propServiceId'), '&amp;ServiceStepMode=1&amp;ServiceStepEnvironment=1')" scope="default" type="STRING"/>
+   <switch xmlns:ns="http://org.apache.synapse/xsd" source="$ctx:LOG_LEVEL">
+      <case regex="^DEBUG|^Debug">
+         <log level="custom" separator="&#xA;">
+            <property name="Information: " expression="concat('GETting Service Orchestration: ', $ctx:uri.var.phost)"/>
+         </log>
+         <property name="LOG_LEVEL" value="Silent"/>
+      </case>
+   </switch>
+   <script language="js">mc.getEnvelope().getBody().getFirstElement().detach();</script>
+   <property name="messageType" scope="axis2" action="remove"/>
+   <property name="Content-Type" scope="transport" action="remove"/>
+   <property name="SOAPAction" scope="transport" action="remove"/>
+   <property name="action" scope="axis2" action="remove"/>
+   <call>
+      <endpoint>
+         <http method="GET" uri-template="{uri.var.phost}"/>
+      </endpoint>
+   </call>
+   <property name="propAPIResponseTestNode" value="tenant_id" scope="default" type="STRING"/>
+   <property name="propAPIResponseErrorMessage" value="Failure Retrieving Process Parms from DSS" scope="default" type="STRING"/>
+   <property name="propLogPostingOnly" value="false" scope="default" type="STRING"/>
+   <sequence key="seqProcessAPIResponse_v1"/>
+   <sequence key="seqCleanPrettyXML"/>
+   <property xmlns:ns="http://org.apache.synapse/xsd" name="propOrchestrationDefinition" expression="$body/child::*" type="OM"/>
+   <property name="SEGMENT_RESULT" value="Completed Successfully" scope="default" type="STRING"/>
+   <property name="SEGMENT_STATE" value="WINDUP" scope="default" type="STRING"/>
+   <property name="propResponseSegmentName" value="PROCESS_PROPERTIES" scope="default" type="STRING"/>
+   <sequence key="seqPostLog"/>
+</sequence>

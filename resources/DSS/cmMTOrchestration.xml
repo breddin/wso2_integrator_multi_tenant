@@ -1,0 +1,425 @@
+<data enableBatchRequests="true" name="cmMTOrchestration" serviceNamespace="https://cloudmills.com" transports="http https local">
+   <config enableOData="false" id="cmdemodbds">
+      <property name="driverClassName">org.postgresql.Driver</property>
+      <property name="url">jdbc:postgresql://yourdataseurl</property>
+      <property name="username">username</property>
+      <property name="password">password</property>
+      <property name="validationQuery">select 1</property>
+      <property name="minIdle">0</property>
+      <property name="maxIdle">0</property>
+      <property name="maxWait">25</property>
+      <property name="testWhileIdle">true</property>
+      <property name="timeBetweenEvictionRunsMillis">20000</property>
+      <property name="minEvictableIdleTimeMillis">60000</property>
+      <property name="removeAbandoned">true</property>
+      <property name="defaultTransactionIsolation">TRANSACTION_NONE</property>
+      <property name="testOnReturn">true</property>
+      <property name="autoCommit">true</property>
+      <property name="jdbcInterceptors">ConnectionState</property>
+      <property name="validationInterval">15000</property>
+      <property name="maxAge">60001</property>
+      <property name="validationQueryTimeout">3</property>
+      <property name="initialSize">75</property>
+      <property name="maxActive">75</property>
+      <property name="dataSourceProps"/>
+      <property name="dynamicUserAuthMapping">
+         <configuration/>
+      </property>
+   </config>
+   <query id="qryGetServiceParameters" useConfig="cmdemodbds">
+      <sql>select * from service_parms where tenant_id = :TenantId and service_id = :ServiceId and service_env = :ServiceEnv</sql>
+      <result element="parms" rowName="parm">
+         <element column="pname" name="pname" xsdType="string"/>
+         <element column="pvalue" name="pvalue" xsdType="string"/>
+      </result>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceEnv" sqlType="STRING"/>
+   </query>
+   <query id="qryGetServiceOrchestrationDefinition" useConfig="cmdemodbds">
+      <sql>select&#xd;   tenant_id,&#xd;   service_id,&#xd;   service_step,&#xd;   service_sequence,&#xd;   service_step_mode,&#xd;   service_step_environment,&#xd;   service_step_log_level,&#xd;   service_step_log_target&#xd;from&#xd;   service_orchestration_definition&#xd;where&#xd;   tenant_id=:TenantId&#xd;   and service_id=:ServiceId&#xd;   and service_step_mode=:ServiceStepMode&#xd;   and service_step_environment=:ServiceStepEnvironment&#xd;order by&#xd;   service_step</sql>
+      <result element="Entries" rowName="Entry">
+         <element column="tenant_id" name="tenant_id" xsdType="string"/>
+         <element column="service_id" name="service_id" xsdType="string"/>
+         <element column="service_step" name="service_step" xsdType="string"/>
+         <element column="service_sequence" name="service_sequence" xsdType="integer"/>
+         <element column="service_step_mode" name="service_step_mode" xsdType="integer"/>
+         <element column="service_step_environment" name="service_step_environment" xsdType="integer"/>
+         <element column="service_step_log_level" name="service_step_log_level" xsdType="string"/>
+         <element column="service_step_log_target" name="service_step_log_target" xsdType="string"/>
+      </result>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceStepMode" optional="false" sqlType="INTEGER"/>
+      <param name="ServiceStepEnvironment" optional="false" sqlType="INTEGER"/>
+   </query>
+   <query id="qryPostServiceParms" useConfig="cmdemodbds">
+      <sql>insert into service_parms&#xd;values (:TenantId, :ServiceId,  :pname, :pvalue, :ServiceEnv)</sql>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="pname" sqlType="STRING"/>
+      <param name="pvalue" sqlType="STRING"/>
+      <param name="ServiceEnv" sqlType="STRING"/>
+   </query>
+   <query id="qryGetTenantTableExists" useConfig="cmdemodbds">
+      <sql>select &#xd; schemaname,&#xd; tablename&#xd;from pg_tables&#xd;where schemaname= :schemaname&#xd;and tablename = :tablename &#xd;;</sql>
+      <result element="ROWS" rowName="ROW">
+         <element column="schemaname" name="schemaname" xsdType="string"/>
+         <element column="tablename" name="tablename" xsdType="string"/>
+      </result>
+      <param name="schemaname" sqlType="STRING"/>
+      <param name="tablename" sqlType="STRING"/>
+   </query>
+   <query id="qryGetNewUUID" useConfig="cmdemodbds">
+      <sql>select uuid_generate_v4();</sql>
+      <result element="ROWS" rowName="ROW">
+         <element column="uuid_generate_v4" name="uuid" xsdType="string"/>
+      </result>
+   </query>
+   <query id="qryPostServiceOrchestrationDefinition" useConfig="cmdemodbds">
+      <sql>insert into service_orchestration_definition&#xd;values&#xd;(:Tenant_Id, :Service_Id, :Service_Step, :Service_Sequence, :Service_Sequence_Type, :Service_Step_Mode, :Service_Step_Environment)</sql>
+      <param name="Tenant_Id" sqlType="STRING"/>
+      <param name="Service_Id" sqlType="STRING"/>
+      <param name="Service_Step" optional="false" sqlType="INTEGER"/>
+      <param name="Service_Sequence" sqlType="STRING"/>
+      <param name="Service_Sequence_Type" optional="false" sqlType="INTEGER"/>
+      <param name="Service_Step_Mode" optional="false" sqlType="INTEGER"/>
+      <param name="Service_Step_Environment" optional="false" sqlType="INTEGER"/>
+   </query>
+   <query id="qryEWQBOGetServiceParameters" useConfig="cmdemodbds">
+      <sql>select pname, pvalue from service_parms where tenant_id = (select tenant_id from service_parms where pname = 'ewCRMId' and pvalue = :ewCRMId) and service_id = :ServiceId and service_env = :ServiceEnv</sql>
+      <result element="parms" rowName="parm">
+         <element column="pname" name="pname" xsdType="string"/>
+         <element column="pvalue" name="pvalue" xsdType="string"/>
+      </result>
+      <param name="ewCRMId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceEnv" sqlType="STRING"/>
+   </query>
+   <query id="qryUdateServiceParms" useConfig="cmdemodbds">
+      <sql>update&#xd;   service_parms&#xd;set&#xd;   pvalue = :ParmValue&#xd;where &#xd;   tenant_id = :TenantId&#xd;   and service_id = :ServiceId&#xd;   and service_env = :ServiceEnv&#xd;   and pname = :ParmName</sql>
+      <param name="ParmValue" sqlType="STRING"/>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceEnv" sqlType="STRING"/>
+      <param name="ParmName" sqlType="STRING"/>
+   </query>
+   <query id="qryAsureQBOGetServiceParameters" useConfig="cmdemodbds">
+      <sql>select pname, pvalue from service_parms where tenant_id = (select tenant_id from service_parms where pname = 'evoTenantId' and pvalue = :evoTenantId) and service_id = :ServiceId and service_env = :ServiceEnv</sql>
+      <result element="parms" rowName="parm">
+         <element column="pname" name="pname" xsdType="string"/>
+         <element column="pvalue" name="pvalue" xsdType="string"/>
+      </result>
+      <param name="evoTenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceEnv" sqlType="STRING"/>
+   </query>
+   <query id="qryInsertServiceRunHistory" useConfig="cmdemodbds">
+      <sql>insert into service_run_history &#xd;values &#xd;(&#xd;	 :TenantId &#xd;	,:ServiceId&#xd;	,:ServiceRunId&#xd;	,:ServiceSegment&#xd;	,:RunStartTime&#xd;        ,NULL&#xd;	,'PENDING'&#xd;	,:RunComments&#xd;        ,:SegmentStartTime&#xd;        ,NULL&#xd;        ,'PENDING'&#xd;        ,:SegmentComments&#xd;        ,NULL&#xd;        ,:SegmentPayload&#xd;);</sql>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceRunId" sqlType="STRING"/>
+      <param name="ServiceSegment" sqlType="STRING"/>
+      <param name="SegmentStartTime" optional="false" sqlType="TIMESTAMP"/>
+      <param name="RunStartTime" optional="false" sqlType="TIMESTAMP"/>
+      <param name="RunComments" sqlType="STRING"/>
+      <param name="SegmentComments" sqlType="STRING"/>
+      <param name="SegmentPayload" sqlType="STRING"/>
+   </query>
+   <query id="qryInsertSegmentRunHistory" useConfig="cmdemodbds">
+      <sql>insert into service_run_history &#xd;values &#xd;(&#xd;	 :TenantId &#xd;	,:ServiceId&#xd;	,:ServiceRunId&#xd;	,:ServiceSegment&#xd;	,:RunStartTime&#xd;        ,NULL&#xd;	,'PENDING'&#xd;	,:RunComments&#xd;        ,:SegmentStartTime&#xd;        ,NULL&#xd;        ,'PENDING'&#xd;        ,:SegmentComments&#xd;        ,NULL&#xd;        ,:SegmentPayload&#xd;);</sql>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceRunId" sqlType="STRING"/>
+      <param name="ServiceSegment" sqlType="STRING"/>
+      <param name="SegmentStartTime" sqlType="STRING"/>
+      <param name="SegmentComments" sqlType="STRING"/>
+      <param name="SegmentPayload" sqlType="STRING"/>
+   </query>
+   <query id="qryUpdateSegmentRunHistory" useConfig="cmdemodbds">
+      <sql>update&#xd;	sensusystem.service_run_history&#xd;set&#xd;	segment_endtime = :SegmentEndTime,&#xd;	segment_result = :SegmentResult,&#xd;	segment_comments = :SegmentComments,&#xd;	segment_payload = :SegmentPayload, &#xd;        segment_control_channel_sidecar = :ControlChannelSidecar,&#xd;        segment_data_channel_sidecar = :DataChannelSidecar,&#xd;        segment_log_channel_sidecar = :LogChannelSidecar,&#xd;        segment_choreography_service_parms = :ChoreographyServiceParms,&#xd;        segment_final_payload_b64 = :SegmentFinalPayloadB64&#xd;where&#xd;	tenant_id = :TenantId&#xd;	and service_id = :ServiceId&#xd;	and service_run_id = :ServiceRunId&#xd;	and service_segment = :ServiceSegment</sql>
+      <param name="SegmentEndTime" sqlType="TIMESTAMP"/>
+      <param name="SegmentResult" sqlType="STRING"/>
+      <param name="SegmentComments" sqlType="STRING"/>
+      <param name="SegmentPayload" sqlType="STRING"/>
+      <param name="ControlChannelSidecar" sqlType="STRING"/>
+      <param name="DataChannelSidecar" sqlType="STRING"/>
+      <param name="LogChannelSidecar" sqlType="STRING"/>
+      <param name="ChoreographyServiceParms" sqlType="STRING"/>
+      <param name="SegmentFinalPayloadB64" sqlType="STRING"/>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceRunId" sqlType="STRING"/>
+      <param name="ServiceSegment" sqlType="STRING"/>
+   </query>
+   <query id="qryUpdateServiceRunHistory" useConfig="cmdemodbds">
+      <sql>update&#xd;	sensusystem.service_run_history&#xd;set&#xd;	segment_endtime = :SegmentEndTime,&#xd;	segment_result = :SegmentResult,&#xd;	segment_comments = :SegmentComments,&#xd;	segment_payload = :SegmentPayload, &#xd;        segment_control_channel_sidecar = :ControlChannelSidecar,&#xd;        segment_data_channel_sidecar = :DataChannelSidecar,&#xd;        segment_log_channel_sidecar = :LogChannelSidecar,&#xd;        segment_choreography_service_parms = :ChoreographyServiceParms,&#xd;        segment_final_payload_b64 = :SegmentFinalPayloadB64,&#xd;        run_endtime = :RunEndTime,&#xd;        run_result = :RunResult&#xd;where&#xd;	tenant_id = :TenantId&#xd;	and service_id = :ServiceId&#xd;	and service_run_id = :ServiceRunId&#xd;	and service_segment = :ServiceSegment</sql>
+      <param name="SegmentEndTime" sqlType="TIMESTAMP"/>
+      <param name="SegmentResult" sqlType="STRING"/>
+      <param name="SegmentComments" sqlType="STRING"/>
+      <param name="SegmentPayload" sqlType="STRING"/>
+      <param name="ControlChannelSidecar" sqlType="STRING"/>
+      <param name="DataChannelSidecar" sqlType="STRING"/>
+      <param name="LogChannelSidecar" sqlType="STRING"/>
+      <param name="ChoreographyServiceParms" sqlType="STRING"/>
+      <param name="SegmentFinalPayloadB64" sqlType="STRING"/>
+      <param name="RunEndTime" sqlType="TIMESTAMP"/>
+      <param name="RunResult" sqlType="STRING"/>
+      <param name="TenantId" sqlType="STRING"/>
+      <param name="ServiceId" sqlType="STRING"/>
+      <param name="ServiceRunId" sqlType="STRING"/>
+      <param name="ServiceSegment" sqlType="STRING"/>
+   </query>
+   <operation name="opGetServiceParameters">
+      <call-query href="qryGetServiceParameters">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </operation>
+   <operation name="opGetServiceOrchestrationDefinition">
+      <call-query href="qryGetServiceOrchestrationDefinition">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceStepMode" query-param="ServiceStepMode"/>
+         <with-param name="ServiceStepEnvironment" query-param="ServiceStepEnvironment"/>
+      </call-query>
+   </operation>
+   <operation name="opPostServiceParms" returnRequestStatus="true">
+      <call-query href="qryPostServiceParms">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="pname" query-param="pname"/>
+         <with-param name="pvalue" query-param="pvalue"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </operation>
+   <operation name="opGetTenantTableExists">
+      <call-query href="qryGetTenantTableExists">
+         <with-param name="schemaname" query-param="schemaname"/>
+         <with-param name="tablename" query-param="tablename"/>
+      </call-query>
+   </operation>
+   <operation name="opGetNewUUID">
+      <call-query href="qryGetNewUUID"/>
+   </operation>
+   <operation name="opPostServiceOrchestrationDefinition" returnRequestStatus="true">
+      <call-query href="qryPostServiceOrchestrationDefinition">
+         <with-param name="Tenant_Id" query-param="Tenant_Id"/>
+         <with-param name="Service_Id" query-param="Service_Id"/>
+         <with-param name="Service_Step" query-param="Service_Step"/>
+         <with-param name="Service_Sequence" query-param="Service_Sequence"/>
+         <with-param name="Service_Sequence_Type" query-param="Service_Sequence_Type"/>
+         <with-param name="Service_Step_Mode" query-param="Service_Step_Mode"/>
+         <with-param name="Service_Step_Environment" query-param="Service_Step_Environment"/>
+      </call-query>
+   </operation>
+   <operation name="opEWQBOGetServiceParameters">
+      <call-query href="qryEWQBOGetServiceParameters">
+         <with-param name="ewCRMId" query-param="ewCRMId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </operation>
+   <operation name="opUpdateServiceParms" returnRequestStatus="true">
+      <call-query href="qryUdateServiceParms">
+         <with-param name="ParmValue" query-param="ParmValue"/>
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+         <with-param name="ParmName" query-param="ParmName"/>
+      </call-query>
+   </operation>
+   <operation name="opAsureQBOGetServiceParameters">
+      <call-query href="qryAsureQBOGetServiceParameters">
+         <with-param name="evoTenantId" query-param="evoTenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </operation>
+   <operation name="opUpdateSegmentRunHistory" returnRequestStatus="true">
+      <call-query href="qryUpdateSegmentRunHistory">
+         <with-param name="SegmentEndTime" query-param="SegmentEndTime"/>
+         <with-param name="SegmentResult" query-param="SegmentResult"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+         <with-param name="ControlChannelSidecar" query-param="ControlChannelSidecar"/>
+         <with-param name="DataChannelSidecar" query-param="DataChannelSidecar"/>
+         <with-param name="LogChannelSidecar" query-param="LogChannelSidecar"/>
+         <with-param name="ChoreographyServiceParms" query-param="ChoreographyServiceParms"/>
+         <with-param name="SegmentFinalPayloadB64" query-param="SegmentFinalPayloadB64"/>
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+      </call-query>
+   </operation>
+   <operation name="opInsertSegmentRunHistory" returnRequestStatus="true">
+      <call-query href="qryInsertSegmentRunHistory">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+         <with-param name="SegmentStartTime" query-param="SegmentStartTime"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+      </call-query>
+   </operation>
+   <operation name="opUpdateServiceRunHistory" returnRequestStatus="true">
+      <call-query href="qryUpdateServiceRunHistory">
+         <with-param name="SegmentEndTime" query-param="SegmentEndTime"/>
+         <with-param name="SegmentResult" query-param="SegmentResult"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+         <with-param name="ControlChannelSidecar" query-param="ControlChannelSidecar"/>
+         <with-param name="DataChannelSidecar" query-param="DataChannelSidecar"/>
+         <with-param name="LogChannelSidecar" query-param="LogChannelSidecar"/>
+         <with-param name="ChoreographyServiceParms" query-param="ChoreographyServiceParms"/>
+         <with-param name="SegmentFinalPayloadB64" query-param="SegmentFinalPayloadB64"/>
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+      </call-query>
+   </operation>
+   <operation name="opInsertServiceRunHistory" returnRequestStatus="true">
+      <call-query href="qryInsertServiceRunHistory">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+         <with-param name="SegmentStartTime" query-param="SegmentStartTime"/>
+         <with-param name="RunStartTime" query-param="RunStartTime"/>
+         <with-param name="RunComments" query-param="RunComments"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+      </call-query>
+   </operation>
+   <resource method="GET" path="resGetServiceParameters">
+      <call-query href="qryGetServiceParameters">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </resource>
+   <resource method="GET" path="resGetServiceOrchestrationDefinition">
+      <call-query href="qryGetServiceOrchestrationDefinition">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceStepMode" query-param="ServiceStepMode"/>
+         <with-param name="ServiceStepEnvironment" query-param="ServiceStepEnvironment"/>
+      </call-query>
+   </resource>
+   <resource method="POST" path="resPostServiceParms" returnRequestStatus="true">
+      <call-query href="qryPostServiceParms">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="pname" query-param="pname"/>
+         <with-param name="pvalue" query-param="pvalue"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </resource>
+   <resource method="GET" path="resGetTenantTableExists">
+      <call-query href="qryGetTenantTableExists">
+         <with-param name="schemaname" query-param="schemaname"/>
+         <with-param name="tablename" query-param="tablename"/>
+      </call-query>
+   </resource>
+   <resource method="GET" path="resGetNewUUID">
+      <call-query href="qryGetNewUUID"/>
+   </resource>
+   <resource method="POST" path="resPostServiceOrchestrationDefinition">
+      <call-query href="qryPostServiceOrchestrationDefinition">
+         <with-param name="Tenant_Id" query-param="Tenant_Id"/>
+         <with-param name="Service_Id" query-param="Service_Id"/>
+         <with-param name="Service_Step" query-param="Service_Step"/>
+         <with-param name="Service_Sequence" query-param="Service_Sequence"/>
+         <with-param name="Service_Sequence_Type" query-param="Service_Sequence_Type"/>
+         <with-param name="Service_Step_Mode" query-param="Service_Step_Mode"/>
+         <with-param name="Service_Step_Environment" query-param="Service_Step_Environment"/>
+      </call-query>
+   </resource>
+   <resource method="GET" path="resExpenseWireQBOGetServiceParameters">
+      <call-query href="qryEWQBOGetServiceParameters">
+         <with-param name="ewCRMId" query-param="ewCRMId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </resource>
+   <resource method="PUT" path="resUpdateServiceParms" returnRequestStatus="true">
+      <call-query href="qryUdateServiceParms">
+         <with-param name="ParmValue" query-param="ParmValue"/>
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+         <with-param name="ParmName" query-param="ParmName"/>
+      </call-query>
+   </resource>
+   <resource method="GET" path="resAsureQBOGetServiceParameters">
+      <call-query href="qryAsureQBOGetServiceParameters">
+         <with-param name="evoTenantId" query-param="evoTenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceEnv" query-param="ServiceEnv"/>
+      </call-query>
+   </resource>
+   <resource method="PUT" path="resUpdateSegmentRunHistory" returnRequestStatus="true">
+      <call-query href="qryUpdateSegmentRunHistory">
+         <with-param name="SegmentEndTime" query-param="SegmentEndTime"/>
+         <with-param name="SegmentResult" query-param="SegmentResult"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+         <with-param name="ControlChannelSidecar" query-param="ControlChannelSidecar"/>
+         <with-param name="DataChannelSidecar" query-param="DataChannelSidecar"/>
+         <with-param name="LogChannelSidecar" query-param="LogChannelSidecar"/>
+         <with-param name="ChoreographyServiceParms" query-param="ChoreographyServiceParms"/>
+         <with-param name="SegmentFinalPayloadB64" query-param="SegmentFinalPayloadB64"/>
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+      </call-query>
+   </resource>
+   <resource method="POST" path="resInsertSegmentRunHistory" returnRequestStatus="true">
+      <call-query href="qryInsertSegmentRunHistory">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+         <with-param name="SegmentStartTime" query-param="SegmentStartTime"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+      </call-query>
+   </resource>
+   <resource method="PUT" path="resUpdateServiceRunHistory" returnRequestStatus="true">
+      <call-query href="qryUpdateServiceRunHistory">
+         <with-param name="SegmentEndTime" query-param="SegmentEndTime"/>
+         <with-param name="SegmentResult" query-param="SegmentResult"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+         <with-param name="ControlChannelSidecar" query-param="ControlChannelSidecar"/>
+         <with-param name="DataChannelSidecar" query-param="DataChannelSidecar"/>
+         <with-param name="LogChannelSidecar" query-param="LogChannelSidecar"/>
+         <with-param name="ChoreographyServiceParms" query-param="ChoreographyServiceParms"/>
+         <with-param name="SegmentFinalPayloadB64" query-param="SegmentFinalPayloadB64"/>
+         <with-param name="RunEndTime" query-param="RunEndTime"/>
+         <with-param name="RunResult" query-param="RunResult"/>
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+      </call-query>
+   </resource>
+   <resource method="POST" path="resInsertServiceRunHistory" returnRequestStatus="true">
+      <call-query href="qryInsertServiceRunHistory">
+         <with-param name="TenantId" query-param="TenantId"/>
+         <with-param name="ServiceId" query-param="ServiceId"/>
+         <with-param name="ServiceRunId" query-param="ServiceRunId"/>
+         <with-param name="ServiceSegment" query-param="ServiceSegment"/>
+         <with-param name="SegmentStartTime" query-param="SegmentStartTime"/>
+         <with-param name="RunStartTime" query-param="RunStartTime"/>
+         <with-param name="RunComments" query-param="RunComments"/>
+         <with-param name="SegmentComments" query-param="SegmentComments"/>
+         <with-param name="SegmentPayload" query-param="SegmentPayload"/>
+      </call-query>
+   </resource>
+</data>
