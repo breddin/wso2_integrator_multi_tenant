@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence xmlns="http://ws.apache.org/ns/synapse"
+          name="seqProcessOrchestrationSegment_v1">
+   <!-- *** ***************************************************** *** -->
+   <!-- ***  Increment "NextOrchestrationStep" pointer to the     *** -->
+   <!-- ***   next integer value to later extract the service     *** -->
+   <!-- ***   sequence name for execution                         *** -->
+   <!-- *** ***************************************************** *** -->
+   <script language="js">var intPageNum=parseInt(mc.getProperty('OrchestrationStepPointer'));
+      intPageNum=intPageNum + 1;
+mc.setProperty('NextOrchestrationStepPointer',intPageNum);</script>
+   <!--property name="LOG_LEVEL" value="TRACEORCH"/-->
+   <property name="propPrevSEGMENT_STATE" expression="$ctx:SEGMENT_STATE"/>
+   <property name="propPrevSERVICE_SEGMENT" expression="$ctx:SERVICE_SEGMENT"/>
+   <property name="SEGMENT_STATE" value="INIT"/>
+   <property name="SERVICE_SEGMENT" expression="$ctx:propOrchestrationDefinition//*[name()='Entry' and ./*[name()='service_step' and text()=string(get-property('OrchestrationStepPointer'))]]/*[name()='service_sequence']/text()"/>
+   <property name="propLoggingPayloadPre" expression="$body"/>
+   <sequence key="seqPostMessageStoreLogSegment_v1"/>
+   <!-- *** ***************************************************** *** -->
+   <!-- ***  Get the name of the service_sequence to be next in   *** -->
+   <!-- ***   order for execution                                 *** -->
+   <!-- *** ***************************************************** *** -->
+   <property xmlns:ns="http://org.apache.synapse/xsd"
+             name="NextOrchestrationSegment"
+             expression="$ctx:propOrchestrationDefinition//*[name()='Entry' and ./*[name()='service_step' and text()=string(get-property('NextOrchestrationStepPointer'))]]/*[name()='service_sequence']/text()"/>
+   <switch xmlns:ns="http://org.apache.synapse/xsd" source="get-property('LOG_LEVEL')">
+      <case regex="^TRACEORCH">
+         <log level="custom" separator="&#xA;">
+            <property name="&#xA;Entering seqProcessOrchestrationSegment with Orchestration Segment::"
+                      expression="get-property('OrchestrationSegment')"/>
+            <property name="NextOrchestrationStepPointer::"
+                      expression="get-property('NextOrchestrationStepPointer')"/>
+            <property name="Next Orchestration Segment::"
+                      expression="get-property('NextOrchestrationSegment')"/>
+         </log>
+      </case>
+   </switch>
+   <!-- *** ***************************************************** *** -->
+   <!-- ***   This dynamic sequence instantiates and executes the *** -->
+   <!-- ***    Synapse orchestration segment in the current       *** -->
+   <!-- ***    pointer (propOrchestrationDefinition               *** -->
+   <!-- *** ***************************************************** *** -->
+   <sequence xmlns:ns="http://org.apache.synapse/xsd"
+             key="{get-property('OrchestrationSegment')}"/>
+   <!--property name="LOG_LEVEL" value="TRACEORCH"/-->
+   <switch xmlns:ns="http://org.apache.synapse/xsd" source="get-property('LOG_LEVEL')">
+      <case regex="^TRACEORCH">
+         <log level="custom" separator="&#xA;">
+            <property name="Completed a dynamic orchestration segment for Orchestration Segment::"
+                      expression="get-property('OrchestrationSegment')"/>
+            <property name="Current processing payload BODY::"
+                      expression="//*"/> <!--[not(*)][1]-->
+         </log>
+      </case>
+   </switch>
+   <property name="SEGMENT_STATE" value="WINDUP"/>
+   <property name="SEGMENT_RESULT" value="Succeeded"/>
+   <property name="propLoggingPayloadPre" expression="$body"/>
+   <sequence key="seqPostMessageStoreLogSegment_v1"/>
+   <property name="SERVICE_SEGMENT" expression="$ctx:propPrevSERVICE_SEGMENT"/>
+   <!-- *** ***************************************************** *** -->
+   <!-- ***   Swapping payloads is no longer needed since we get  *** -->
+   <!-- ***    Orchestration Definition from a property rather    *** -->
+   <!-- ***    than from swapping out Body payloads               *** -->
+   <!-- *** ***************************************************** *** -->
+   <!--property xmlns:ns="http://org.apache.synapse/xsd"
+             name="propOrchestrationSegmentPayload"
+             expression="$body"
+             scope="default"
+             type="OM"/-->
+   <script language="js">var intPageNum=parseInt(mc.getProperty('OrchestrationStepPointer'));
+   intPageNum=intPageNum + 1;
+mc.setProperty('OrchestrationStepPointer',intPageNum);</script>
+   <!--script language="js">mc.getEnvelope().getBody().getFirstElement().detach();</script-->
+   <switch xmlns:ns="http://org.apache.synapse/xsd" source="get-property('LOG_LEVEL')">
+      <case regex="^TRACEORCH">
+         <log level="custom" separator="&#xA;">
+            <property name="PreSwitch::"
+                      expression="get-property('NextOrchestrationSegment')"/>
+         </log>
+      </case>
+   </switch>
+   <switch xmlns:ns="http://org.apache.synapse/xsd"
+           source="get-property('NextOrchestrationSegment')">
+      <case regex="^(\S+)$">
+         <property name="OrchestrationSegment"
+                   expression="get-property('NextOrchestrationSegment')"
+                   scope="default"/>
+         <switch source="get-property('LOG_LEVEL')">
+            <case regex="^TRACEORCH">
+               <log level="custom" separator="&#xA;">
+                  <property name="RESPONSE RELOADED FROM INITIAL DYNCALL"
+                            expression="//*[not(*)][1]"/>
+               </log>
+            </case>
+         </switch>
+         <sequence key="seqProcessOrchestrationSegment_v1"/>
+      </case>
+      <default>
+         <switch source="get-property('LOG_LEVEL')">
+            <case regex="^TRACEORCH">
+               <log level="custom" separator="&#xA;">
+                  <property name="Orchestration Segment Iterator was EMPTY"
+                            value="Exiting seqProcessOrchestrationSegment"/>
+               </log>
+            </case>
+         </switch>
+      </default>
+   </switch>
+</sequence>
